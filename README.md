@@ -1,7 +1,7 @@
 # 📡 智媒体 (Self-Media) v1.2.0
-
-**智媒体** 是 QwenPaw 插件，以卡牌式界面展示云服务器上的所有 AI 智能体，支持一键生成分享链接和直接体验对话。
-
+**智媒体 **是 QwenPaw 插件，以卡牌式界面展示云服务器上的所有 AI 智能体，支持一键生成分享链接和直接体验对话。
+也可以独立做网页发布。
+Zhimeiti is a QwenPaw plugin that displays all AI agents on the cloud server with a card-based interface, supporting one-click generation of share links and direct conversation experience. It can also be published as an independent website.
 ## ✨ 特性
 
 | 特性 | 说明 |
