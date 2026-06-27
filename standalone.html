@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>智媒体 - 智能体卡牌展示</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;min-height:100vh;padding:20px}
+.container{max-width:1400px;margin:0 auto}
+.header{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.header-icon{font-size:32px}
+.header h1{margin:0;font-size:24px;font-weight:700;color:#1e293b}
+.header p{margin:4px 0 0;font-size:13px;color:#94a3b8}
+.toolbar{display:flex;gap:10px;margin:16px 0;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:9px 16px;border:none;border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;transition:all 0.2s}
+.btn:hover{opacity:0.85}
+.btn:active{transform:scale(0.97)}
+.btn-primary{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff}
+.btn-secondary{background:#f1f5f9;color:#475569}
+.search-wrap{position:relative;margin-bottom:16px}
+.search-wrap input{width:100%;padding:10px 14px 10px 38px;border-radius:10px;border:1px solid #e2e8f0;font-size:14px;outline:none;transition:border-color 0.2s}
+.search-wrap input:focus{border-color:#667eea}
+.search-wrap .icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.card{border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.06);transition:all 0.3s;background:#fff;animation:fadeIn 0.5s ease}
+.card:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,0,0,0.12)}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.card-banner{height:90px;display:flex;align-items:center;justify-content:center;font-size:38px}
+.card-body{padding:16px}
+.card-title{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.card-title h3{margin:0;font-size:16px;font-weight:600;color:#1e293b;flex:1}
+.badge{font-size:11px;padding:2px 8px;border-radius:10px;font-weight:500}
+.badge-online{background:#dcfce7;color:#166534}
+.badge-offline{background:#fee2e2;color:#991b1b}
+.card-desc{font-size:12px;color:#64748b;margin-bottom:10px;line-height:1.5}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.tag{font-size:11px;padding:3px 10px;border-radius:6px}
+.tag-id{background:#f1f5f9;color:#475569}
+.tag-model{background:#fef3c7;color:#92400e}
+.card-actions{display:flex;gap:8px}
+.card-actions .btn{flex:1;font-size:12px;padding:8px 10px}
+.link-display{margin-top:10px;font-size:11px;color:#94a3b8;word-break:break-all;font-family:monospace;background:#f8fafc;padding:6px 10px;border-radius:6px;border:1px solid #e2e8f0}
+.empty-state{text-align:center;padding:60px 20px;color:#94a3b8}
+.empty-state .big-icon{font-size:48px;margin-bottom:12px;opacity:0.4}
+.empty-state p{font-size:14px}
+.footer{text-align:center;margin-top:28px;padding:14px;font-size:14px;font-weight:600;color:#475569;border-top:1px solid #e2e8f0}
+.toast{position:fixed;top:20px;right:20px;z-index:9999;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:500;transition:all 0.3s}
+.toast-info{background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe}
+.toast-success{background:#dcfce7;color:#166534;border:1px solid #bbf7d0}
+.toast-error{background:#fee2e2;color:#991b1b;border:1px solid #fecaca}
+.loading{text-align:center;padding:60px 20px;color:#94a3b8}
+.loading .spin{font-size:32px;margin-bottom:12px;animation:spin 1s linear infinite}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="container" id="app"></div>
+<script>
+// ===== 智能体主题配置（含动物图标） =====
+const THEMES = {
+  'cloud-orchestrator': { bg: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)', icon: '\ud83e\udd8a', accent: '#e94560' },
+  'cloud-executor': { bg: 'linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%)', icon: '\ud83d\udc3a', accent: '#00d2ff' },
+  'cloud-verifier': { bg: 'linear-gradient(135deg, #000428 0%, #004e92 100%)', icon: '\ud83e\udd85', accent: '#00b4d8' },
+  'cloud-builder': { bg: 'linear-gradient(135deg, #42275a 0%, #734b6d 100%)', icon: '\ud83d\udc3b', accent: '#e8a87c' },
+  'cloud-monitor': { bg: 'linear-gradient(135deg, #134e5e 0%, #71b280 100%)', icon: '\ud83e\udd8c', accent: '#71b280' },
+  'cloud-network': { bg: 'linear-gradient(135deg, #2c3e50 0%, #3498db 100%)', icon: '\ud83d\udc1d', accent: '#3498db' },
+  'cloud-storage': { bg: 'linear-gradient(135deg, #3a1c71 0%, #d76d77 50%, #ffaf7b 100%)', icon: '\ud83e\udd81', accent: '#d76d77' },
+  'cloud-security': { bg: 'linear-gradient(135deg, #0f3443 0%, #34e89e 100%)', icon: '\ud83e\udd8d', accent: '#34e89e' },
+  'ai-assistant': { bg: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', icon: '\ud83e\udd84', accent: '#667eea' },
+  'data-analyst': { bg: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', icon: '\ud83e\udd89', accent: '#f5576c' },
+  'code-reviewer': { bg: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', icon: '\ud83d\udc22', accent: '#4facfe' },
+  'devops-bot': { bg: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', icon: '\ud83d\udc32', accent: '#43e97b' },
+};
+// ===== 图标池（植物+动物）======
+const ICONS = [
+  // 植物
+  '🌳','🌸','🌲','🌻','🌷','🌹','🌺','🌵','🌴','🍀','🎋','🎍',
+  // 动物
+  '🦁','🐺','🦉','🐬','🦅','🦊','🐻','🦄','🐒','🦍','🐟','🐛','🦀','🐱','🐶','🦜','🐦','🦆'
+];
+
+function getTheme(id) {
+  if (THEMES[id]) {
+    // 如果有预设主题，也分配随机图标
+    let hash = 0;
+    for (let i = 0; i < id.length; i++) { hash = ((hash << 5) - hash) + id.charCodeAt(i); hash |= 0; }
+    return { ...THEMES[id], icon: ICONS[Math.abs(hash) % ICONS.length] };
+  }
+  // 根据 ID 哈希分配图标
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = ((hash << 5) - hash) + id.charCodeAt(i);
+    hash |= 0;
+  }
+  const idx = Math.abs(hash) % ICONS.length;
+  const colors = ['#e94560','#00d2ff','#00b4d8','#e8a87c','#71b280','#3498db','#d76d77','#34e89e','#667eea','#f5576c','#4facfe','#43e97b','#ff6b6b','#feca57','#48dbfb','#ff9ff3','#54a0ff','#5f27cd','#01a3a4','#f368e0'];
+  const c = colors[Math.abs(hash) % colors.length];
+  return { bg: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)', icon: ICONS[idx], accent: c };
+}
+
+function copyText(text) {
+  navigator.clipboard.writeText(text).then(function() { showToast('\u94fe\u63a5\u5df2\u590d\u5236\u5230\u526a\u8d34\u677f', 'success'); });
+}
+
+// ===== API 调用 =====
+const API_BASE = '/api/self-media';
+let agents = [];
+let loading = true;
+let error = null;
+let searchText = '';
+let generating = false;
+let toastMsg = null;
+let toastType = 'info';
+
+function showToast(msg, type) {
+  toastMsg = msg;
+  toastType = type || 'info';
+  render();
+  setTimeout(function() { toastMsg = null; render(); }, 3500);
+}
+
+function fetchData() {
+  loading = true;
+  render();
+  fetch(API_BASE + '/agents')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.success) {
+        agents = d.agents || [];
+        error = d.error || null;
+      } else {
+        error = d.error || '\u83b7\u53d6\u5931\u8d25';
+      }
+      loading = false;
+      render();
+    })
+    .catch(function(e) {
+      error = e.message;
+      loading = false;
+      render();
+    });
+}
+
+function generateLinks() {
+  generating = true;
+  render();
+  fetch(API_BASE + '/share-links', { method: 'POST' })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.success) {
+        fetchData();
+        showToast('\u5206\u4eab\u94fe\u63a5\u5df2\u751f\u6210\uff01', 'success');
+      } else {
+        showToast(d.error || '\u751f\u6210\u5931\u8d25', 'error');
+      }
+      generating = false;
+    })
+    .catch(function(e) {
+      showToast(e.message, 'error');
+      generating = false;
+    });
+}
+
+function openChat(url) {
+  if (!url) { showToast('\u8bf7\u5148\u751f\u6210\u5206\u4eab\u94fe\u63a5', 'error'); return; }
+  var w = window.open(url, '_blank');
+  if (!w || w.closed || typeof w.closed === 'undefined') {
+    alert('When an error occurs, link 0+1+2\u22603 Team Email:115886@qq.com');
+  }
+}
+
+// ===== HTML 渲染 =====
+function render() {
+  var app = document.getElementById('app');
+  var html = '';
+
+  // Header
+  html += '<div class="header"><div class="header-icon">\ud83d\udce1</div><div><h1>\u667a\u5a92\u4f53</h1><p>' + (loading ? '\u52a0\u8f7d\u4e2d...' : agents.length + ' \u4e2a\u667a\u80fd\u4f53 \u00b7 \u70b9\u51fb\u5361\u724c\u4f53\u9a8c\u5bf9\u8bdd') + '</p></div></div>';
+
+  // Toolbar
+  html += '<div class="toolbar">';
+  html += '<button class="btn btn-primary" onclick="generateLinks()"' + (generating ? ' disabled' : '') + '>' + (generating ? '\ud83d\udd04 \u751f\u6210\u4e2d...' : '\ud83d\udd17 \u751f\u6210\u6c38\u4e45\u94fe\u63a5') + '</button>';
+  html += '<button class="btn btn-secondary" onclick="fetchData()">\ud83d\udd04 \u5237\u65b0</button>';
+  html += '</div>';
+
+  // Toast
+  if (toastMsg) {
+    html += '<div class="toast toast-' + toastType + '">' + toastMsg + '</div>';
+  }
+
+  // Search
+  html += '<div class="search-wrap"><span class="icon">\ud83d\udd0d</span><input type="text" placeholder="\u641c\u7d22\u667a\u80fd\u4f53..." value="' + searchText.replace(/"/g, '&quot;') + '" oninput="searchText=this.value;render()"></div>';
+
+  // Error
+  if (error) {
+    html += '<div style="color:#dc2626;background:#fef2f2;border:1px solid #fecaca;padding:12px;border-radius:8px;margin-bottom:16px">\u26a0\ufe0f ' + error + '</div>';
+  }
+
+  // Loading
+  if (loading && agents.length === 0) {
+    html += '<div class="loading"><div class="spin">\ud83d\udd04</div><p>\u6b63\u5728\u52a0\u8f7d\u667a\u80fd\u4f53\u5217\u8868...</p></div>';
+    app.innerHTML = html;
+    return;
+  }
+
+  // Filter
+  var filtered = agents;
+  if (searchText) {
+    var q = searchText.toLowerCase();
+    filtered = agents.filter(function(a) { return a.name.toLowerCase().indexOf(q) !== -1 || a.id.toLowerCase().indexOf(q) !== -1; });
+  }
+
+  // Cards
+  if (filtered.length === 0) {
+    html += '<div class="empty-state"><div class="big-icon">\ud83d\udce1</div><p>' + (searchText ? '\u6ca1\u6709\u5339\u914d\u7684\u667a\u80fd\u4f53' : '\u6682\u65e0\u53ef\u7528\u667a\u80fd\u4f53') + '</p></div>';
+  } else {
+    html += '<div class="grid">';
+    filtered.forEach(function(ag, idx) {
+      var t = getTheme(ag.id);
+      var hasLink = !!ag.share_url;
+      var statusText = ag.status === 'online' ? '\ud83d\udfe2 \u5728\u7ebf' : '\ud83d\udd34 \u79bb\u7ebf';
+      var statusClass = ag.status === 'online' ? 'badge-online' : 'badge-offline';
+      html += '<div class="card" style="animation-delay:' + (idx * 0.05) + 's">';
+      html += '<div class="card-banner" style="background:' + t.bg + '">' + t.icon + '</div>';
+      html += '<div class="card-body">';
+      html += '<div class="card-title"><h3>' + ag.name + '</h3><span class="badge ' + statusClass + '">' + statusText + '</span></div>';
+      html += '<div class="card-desc">' + (ag.description || '\u6682\u65e0\u63cf\u8ff0') + '</div>';
+      html += '<div class="tags"><span class="tag tag-id">\ud83e\uddd6 ' + ag.id + '</span>';
+      if (ag.model && ag.model !== '-') html += '<span class="tag tag-model">\ud83e\udde0 ' + ag.model + '</span>';
+      html += '</div>';
+      if (hasLink) html += '<div class="link-display">' + ag.share_url + '</div>';
+      html += '<div class="card-actions">';
+      html += '<button class="btn" style="background:' + (hasLink ? '#f0fdf4' : '#e2e8f0') + ';color:' + (hasLink ? '#16a34a' : '#94a3b8') + ';cursor:' + (hasLink ? 'pointer' : 'not-allowed') + '" onclick="' + (hasLink ? 'copyText(\'' + ag.share_url.replace(/'/g, "\\'") + '\')' : 'showToast(\'\u8bf7\u5148\u751f\u6210\u5206\u4eab\u94fe\u63a5\',\'error\')') + '">' + '\ud83d\udccb \u590d\u5236\u94fe\u63a5' + '</button>';
+      html += '<button class="btn" style="flex:1;background:' + (hasLink ? t.bg : '#e2e8f0') + ';color:' + (hasLink ? '#fff' : '#94a3b8') + ';cursor:' + (hasLink ? 'pointer' : 'not-allowed') + '" onclick="openChat(\'' + (ag.share_url || '').replace(/'/g, "\\'") + '\')">' + (hasLink ? '\ud83d\udcac \u4f53\u9a8c\u5bf9\u8bdd' : '\u23f3 \u6682\u65e0\u94fe\u63a5') + '</button>';
+      html += '</div>';
+      html += '</div></div>';
+    });
+    html += '</div>';
+  }
+
+  // Footer
+  html += '<div class="footer">\u667a\u5a92\u4f53\u771f\u5b9e\u6f14\u793a \u00b7 \u70b9\u51fb\u201c\u4f53\u9a8c\u5bf9\u8bdd\u201d\u8fdb\u884c\u4f53\u9a8c\uff0c\u89c9\u5f97\u597d\u540e\u590d\u5236\u94fe\u63a5\u5206\u4eab\u7ed9\u670b\u53cb</div>';
+
+  app.innerHTML = html;
+}
+
+// 自动刷新（120秒）
+fetchData();
+generateLinks();
+setInterval(fetchData, 120000);
+</script>
+</body>
+</html>

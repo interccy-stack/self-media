@@ -1,0 +1,26 @@
+{
+  "id": "self-media",
+  "name": "智媒体",
+  "version": "1.2.0",
+  "type": "general",
+  "description": "分享数字专家 — 卡牌式展示云端数字专家（智能体），自动生成永久分享链接，一键点击即可体验对话。",
+  "description_i18n": {
+    "zh-CN": "分享数字专家 — 卡牌式展示云端数字专家（智能体），自动生成永久分享链接，一键点击即可体验对话。",
+    "en-US": "Share Digital Experts — Display cloud digital experts (agents) in card style, auto-generate permanent share links, one-click to chat.",
+    "ja-JP": "デジタルエキスパートの共有 — クラウド上のデジタルエキスパートをカード形式で表示、永久共有リンクを自動生成、ワンクリックで対話。"
+  },
+  "author": "0+1+2≠3 Team 115886",
+  "entry": {
+    "backend": "plugin.py",
+    "frontend": "frontend/dist/index.js"
+  },
+  "menu": {
+    "label": "智媒体",
+    "icon": "智",
+    "description": "分享数字专家，卡牌式展示，自动生成分享链接"
+  },
+  "dependencies": [
+    "paramiko>=3.0.0"
+  ],
+  "min_version": "1.1.10"
+}

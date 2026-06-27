@@ -1,0 +1,18 @@
+{
+  "id": "self-media",
+  "name": "智媒体",
+  "version": "1.2.0",
+  "type": "general",
+  "description": "分享数字专家 — 卡牌式展示云端数字专家（智能体），自动生成永久分享链接，一键点击即可体验对话。",
+  "author": "0+1+2≠3 Team 115886",
+  "entry": {
+    "backend": "plugin.py",
+    "frontend": "frontend/dist/index.js"
+  },
+  "menu": {
+    "label": "智媒体",
+    "icon": "智",
+    "description": "分享数字专家，卡牌式展示，自动生成分享链接"
+  },
+  "min_version": "1.1.10"
+}

@@ -1,0 +1,10 @@
+{
+  "host": "agent.bh-jk.com",
+  "port": 22,
+  "user": "root",
+  "password": "请在这里填入你的服务器密码",
+  "share_domain": "agent.bh-jk.com",
+  "agent_port": 8889,
+  "api_port": 8890,
+  "cache_ttl": 120
+}
